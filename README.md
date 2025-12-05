@@ -165,8 +165,8 @@ bird check
 ### Credential sources (macOS)
 
 Used only when transport resolves to **graphql**:
-- **Chrome (default)**: `~/Library/Application Support/Google/Chrome/<Profile>/Cookies` (WAL/SHM copied too). `--chrome-profile <name>`.
-- **Firefox**: `~/Library/Application Support/Firefox/Profiles/<profile>/cookies.sqlite`. `--firefox-profile <name>` (defaults to `*.default-release` if present).
+- **Firefox (default)**: `~/Library/Application Support/Firefox/Profiles/<profile>/cookies.sqlite`. `--firefox-profile <name>` (defaults to `default-release` if present).
+- **Chrome**: `~/Library/Application Support/Google/Chrome/<Profile>/Cookies` (WAL/SHM copied too). `--chrome-profile <name>`.
 - **Env/flags** always override browser cookies.
 
 Precedence: CLI flags > env vars > project config > global config. Transport is chosen first; then, if transport is GraphQL, cookie source is chosen.
@@ -185,6 +185,8 @@ bird --sweetistics-base-url "http://localhost:3000" --sweetistics-api-key "sweet
 
 When an API key is present, `bird` will use Sweetistics’ `/api/actions/tweet` endpoint and skip local cookie resolution.
 All Sweetistics calls have a 15s timeout so the CLI won’t hang if the API is slow or unreachable.
+
+**Threads/replies freshness (Sweetistics):** conversation calls (`thread`, `replies`) are requested with `force=true`, bypassing Sweetistics cache to ensure the latest tweets are returned.
 
 ⚠️ GraphQL mode uses X’s internal endpoints and is rate‑limited aggressively; expect 429s if you run many reads/writes without Sweetistics.
 
