@@ -14,7 +14,7 @@ const FALLBACK_QUERY_IDS = {
   CreateTweet: 'TAJw1rBsjAtdNgTdlo2oeg',
   CreateRetweet: 'ojPdsZsimiJrUGLR1sjUtA',
   FavoriteTweet: 'lI07N6Otwv1PhnEgXILM7A',
-  TweetDetail: 'nBS-WpgA6ZG0CyNHD517JQ',
+  TweetDetail: '97JF30KziU00483E_8elBA',
   SearchTimeline: 'M1jEez78PEfVfbQLvlWMvQ',
   UserArticlesTweets: '8zBy9h4L90aDL02RsBcCFg',
 } as const;
@@ -25,6 +25,10 @@ const QUERY_IDS: Record<OperationName, string> = {
   ...FALLBACK_QUERY_IDS,
   ...(queryIds as Partial<Record<OperationName, string>>),
 };
+
+const TWEET_DETAIL_QUERY_IDS = Array.from(
+  new Set([QUERY_IDS.TweetDetail, '97JF30KziU00483E_8elBA', 'aFvUsJm2c-oDkJV75blV6g']),
+);
 
 const SEARCH_TIMELINE_QUERY_IDS = Array.from(
   new Set([QUERY_IDS.SearchTimeline, 'M1jEez78PEfVfbQLvlWMvQ', '5h0kNbk3ii97rmfY6CdgAA', 'Tp1sewRU1AsZpBWhqCZicQ']),
@@ -636,6 +640,23 @@ export class TwitterClient {
     };
   }
 
+  private buildTweetDetailFeatures(): Record<string, boolean> {
+    return {
+      ...this.buildArticleFeatures(),
+      responsive_web_graphql_exclude_directive_enabled: true,
+      communities_web_enable_tweet_community_results_fetch: true,
+      responsive_web_twitter_article_plain_text_enabled: true,
+      responsive_web_twitter_article_seed_tweet_detail_enabled: true,
+      responsive_web_twitter_article_seed_tweet_summary_enabled: true,
+      longform_notetweets_rich_text_read_enabled: true,
+      longform_notetweets_inline_media_enabled: true,
+      responsive_web_edit_tweet_api_enabled: true,
+      tweet_awards_web_tipping_enabled: false,
+      creator_subscriptions_quote_tweet_preview_enabled: false,
+      verified_phone_label_enabled: false,
+    };
+  }
+
   private buildArticleFieldToggles(): Record<string, boolean> {
     return {
       withPayments: false,
@@ -798,33 +819,19 @@ export class TwitterClient {
     };
 
     const features = {
-      rweb_tipjar_consumption_enabled: true,
-      responsive_web_graphql_exclude_directive_enabled: true,
-      verified_phone_label_enabled: false,
-      creator_subscriptions_tweet_preview_api_enabled: true,
-      responsive_web_graphql_timeline_navigation_enabled: true,
-      responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
-      communities_web_enable_tweet_community_results_fetch: true,
-      c9s_tweet_anatomy_moderator_badge_enabled: true,
+      ...this.buildTweetDetailFeatures(),
       articles_preview_enabled: true,
       articles_rest_api_enabled: true,
-      responsive_web_edit_tweet_api_enabled: true,
+      responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
+      creator_subscriptions_tweet_preview_api_enabled: true,
       graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
       view_counts_everywhere_api_enabled: true,
       longform_notetweets_consumption_enabled: true,
       responsive_web_twitter_article_tweet_consumption_enabled: true,
-      responsive_web_twitter_article_plain_text_enabled: true,
-      responsive_web_twitter_article_seed_tweet_detail_enabled: true,
-      responsive_web_twitter_article_seed_tweet_summary_enabled: true,
-      tweet_awards_web_tipping_enabled: false,
-      creator_subscriptions_quote_tweet_preview_enabled: false,
       freedom_of_speech_not_reach_fetch_enabled: true,
       standardized_nudges_misinfo: true,
       tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
       rweb_video_timestamps_enabled: true,
-      longform_notetweets_rich_text_read_enabled: true,
-      longform_notetweets_inline_media_enabled: true,
-      responsive_web_enhance_cards_enabled: false,
     };
 
     const params = new URLSearchParams({
@@ -832,44 +839,67 @@ export class TwitterClient {
       features: JSON.stringify(features),
     });
 
-    const url = `${TWITTER_API_BASE}/${QUERY_IDS.TweetDetail}/TweetDetail?${params}`;
-
     try {
-      const response = await this.fetchWithTimeout(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
+      const parseResponse = async (response: Response) => {
+        if (!response.ok) {
+          const text = await response.text();
+          return { success: false as const, error: `HTTP ${response.status}: ${text.slice(0, 200)}` };
+        }
 
-      if (!response.ok) {
-        const text = await response.text();
-        return { success: false, error: `HTTP ${response.status}: ${text.slice(0, 200)}` };
-      }
-
-      const data = (await response.json()) as {
-        data?: {
-          tweetResult?: { result?: GraphqlTweetResult };
-          threaded_conversation_with_injections_v2?: {
-            instructions?: Array<{
-              entries?: Array<{
-                content?: {
-                  itemContent?: {
-                    tweet_results?: {
-                      result?: GraphqlTweetResult;
+        const data = (await response.json()) as {
+          data?: {
+            tweetResult?: { result?: GraphqlTweetResult };
+            threaded_conversation_with_injections_v2?: {
+              instructions?: Array<{
+                entries?: Array<{
+                  content?: {
+                    itemContent?: {
+                      tweet_results?: {
+                        result?: GraphqlTweetResult;
+                      };
                     };
                   };
-                };
+                }>;
               }>;
-            }>;
+            };
           };
+          errors?: Array<{ message: string; code?: number }>;
         };
-        errors?: Array<{ message: string; code?: number }>;
+
+        if (data.errors && data.errors.length > 0) {
+          return { success: false as const, error: data.errors.map((e) => e.message).join(', ') };
+        }
+
+        return { success: true as const, data: data.data ?? {} };
       };
 
-      if (data.errors && data.errors.length > 0) {
-        return { success: false, error: data.errors.map((e) => e.message).join(', ') };
+      let lastError: string | undefined;
+
+      for (const queryId of TWEET_DETAIL_QUERY_IDS) {
+        const url = `${TWITTER_API_BASE}/${queryId}/TweetDetail?${params}`;
+        const response = await this.fetchWithTimeout(url, {
+          method: 'GET',
+          headers: this.getHeaders(),
+        });
+
+        if (response.status !== 404) {
+          return await parseResponse(response);
+        }
+
+        const postResponse = await this.fetchWithTimeout(`${TWITTER_API_BASE}/${queryId}/TweetDetail`, {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify({ variables, features, queryId }),
+        });
+
+        if (postResponse.status !== 404) {
+          return await parseResponse(postResponse);
+        }
+
+        lastError = 'HTTP 404';
       }
 
-      return { success: true, data: data.data ?? {} };
+      return { success: false, error: lastError ?? 'Unknown error fetching tweet detail' };
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }

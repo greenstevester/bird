@@ -283,7 +283,7 @@ describe('TwitterClient', () => {
     });
 
     it('should report HTTP errors from getTweet', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
         text: async () => 'Not Found',
@@ -473,6 +473,38 @@ describe('TwitterClient', () => {
 
       expect(result.success).toBe(true);
       expect(result.tweet?.text).toBe('Long form note content.');
+    });
+
+    it('retries TweetDetail query id on 404', async () => {
+      const payload = {
+        data: {
+          tweetResult: {
+            result: {
+              rest_id: '1',
+              legacy: {
+                full_text: 'hello',
+                created_at: '2024-01-01T00:00:00Z',
+                reply_count: 0,
+                retweet_count: 0,
+                favorite_count: 0,
+              },
+              core: { user_results: { result: { legacy: { screen_name: 'root', name: 'Root' } } } },
+            },
+          },
+        },
+      };
+
+      mockFetch
+        .mockResolvedValueOnce({ ok: false, status: 404, text: async () => '' })
+        .mockResolvedValueOnce({ ok: false, status: 404, text: async () => '' })
+        .mockResolvedValueOnce({ ok: true, status: 200, json: async () => payload });
+
+      const client = new TwitterClient({ cookies: validCookies });
+      const result = await client.getTweet('1');
+
+      expect(result.success).toBe(true);
+      expect(result.tweet?.id).toBe('1');
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
   });
 
