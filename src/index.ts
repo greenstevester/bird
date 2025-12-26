@@ -12,7 +12,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { Command, Option } from 'commander';
+import { Command } from 'commander';
 import JSON5 from 'json5';
 import kleur from 'kleur';
 import { resolveCliInvocation } from './lib/cli-args.js';
@@ -45,6 +45,32 @@ const collect = (value: string, previous: string[] = []) => {
   return previous;
 };
 
+const COOKIE_SOURCES: CookieSource[] = ['safari', 'chrome', 'firefox'];
+
+function parseCookieSource(value: string): CookieSource {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'safari' || normalized === 'chrome' || normalized === 'firefox') return normalized;
+  throw new Error(`Invalid --cookie-source "${value}". Allowed: safari, chrome, firefox.`);
+}
+
+function resolveCookieSourceOrder(input: unknown): CookieSource[] | undefined {
+  if (typeof input === 'string') return [parseCookieSource(input)];
+  if (Array.isArray(input)) {
+    const result: CookieSource[] = [];
+    for (const entry of input) {
+      if (typeof entry !== 'string') continue;
+      result.push(parseCookieSource(entry));
+    }
+    return result.length > 0 ? result : undefined;
+  }
+  return undefined;
+}
+
+const collectCookieSource = (value: string, previous: CookieSource[] = []) => {
+  previous.push(parseCookieSource(value));
+  return previous;
+};
+
 const p = (kind: Parameters<typeof statusPrefix>[0]) => statusPrefix(kind, output);
 const l = (kind: Parameters<typeof labelPrefix>[0]) => labelPrefix(kind, output);
 
@@ -70,10 +96,7 @@ const colors = {
 type BirdConfig = {
   chromeProfile?: string;
   firefoxProfile?: string;
-  cookieSource?: CookieSource;
-  allowSafari?: boolean;
-  allowChrome?: boolean;
-  allowFirefox?: boolean;
+  cookieSource?: CookieSource | CookieSource[];
   timeoutMs?: number;
 };
 
@@ -146,10 +169,11 @@ program
   .option('--ct0 <token>', 'Twitter ct0 cookie')
   .option('--chrome-profile <name>', 'Chrome profile name for cookie extraction', config.chromeProfile)
   .option('--firefox-profile <name>', 'Firefox profile name for cookie extraction', config.firefoxProfile)
-  .addOption(
-    new Option('--cookie-source <source>', 'Cookie source for browser cookie extraction')
-      .choices(['auto', 'safari', 'chrome', 'firefox'])
-      .default(config.cookieSource ?? 'auto'),
+  .option(
+    '--cookie-source <source>',
+    'Cookie source for browser cookie extraction (repeatable)',
+    collectCookieSource,
+    [],
   )
   .option('--media <path>', 'Attach media file (repeatable, up to 4 images or 1 video)', collect, [])
   .option('--alt <text>', 'Alt text for the corresponding --media (repeatable)', collect, [])
@@ -163,19 +187,19 @@ type CredentialsOptions = {
   ct0?: string;
   chromeProfile?: string;
   firefoxProfile?: string;
-  cookieSource?: CookieSource;
+  cookieSource?: CookieSource[];
 };
 
 function resolveCredentialsFromOptions(opts: CredentialsOptions) {
+  const cookieSource = opts.cookieSource?.length
+    ? opts.cookieSource
+    : (resolveCookieSourceOrder(config.cookieSource) ?? COOKIE_SOURCES);
   return resolveCredentials({
     authToken: opts.authToken,
     ct0: opts.ct0,
-    cookieSource: opts.cookieSource ?? config.cookieSource ?? 'auto',
+    cookieSource,
     chromeProfile: opts.chromeProfile || config.chromeProfile,
     firefoxProfile: opts.firefoxProfile || config.firefoxProfile,
-    allowSafari: config.allowSafari ?? true,
-    allowChrome: config.allowChrome ?? true,
-    allowFirefox: config.allowFirefox ?? true,
   });
 }
 

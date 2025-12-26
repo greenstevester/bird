@@ -20,7 +20,7 @@ export interface CookieExtractionResult {
   warnings: string[];
 }
 
-export type CookieSource = 'auto' | 'safari' | 'chrome' | 'firefox';
+export type CookieSource = 'safari' | 'chrome' | 'firefox';
 
 function normalizeValue(value: unknown): string | null {
   if (typeof value === 'string') {
@@ -446,12 +446,9 @@ export async function extractCookiesFromFirefox(profile?: string): Promise<Cooki
 export async function resolveCredentials(options: {
   authToken?: string;
   ct0?: string;
-  cookieSource?: CookieSource;
-  allowSafari?: boolean;
+  cookieSource?: CookieSource | CookieSource[];
   chromeProfile?: string;
   firefoxProfile?: string;
-  allowChrome?: boolean;
-  allowFirefox?: boolean;
 }): Promise<CookieExtractionResult> {
   const warnings: string[] = [];
   const cookies: TwitterCookies = {
@@ -460,7 +457,7 @@ export async function resolveCredentials(options: {
     source: null,
   };
 
-  const cookieSource: CookieSource = options.cookieSource ?? 'auto';
+  const cookieSource = options.cookieSource;
 
   // 1. CLI arguments (highest priority)
   if (options.authToken) {
@@ -498,22 +495,16 @@ export async function resolveCredentials(options: {
     }
   }
 
-  const allowSafari = options.allowSafari ?? true;
-  const allowChrome = options.allowChrome ?? true;
-  const allowFirefox = options.allowFirefox ?? true;
-
-  const sourcesToTry: Array<Exclude<CookieSource, 'auto'>> =
-    cookieSource === 'auto' ? ['safari', 'chrome', 'firefox'] : [cookieSource];
+  const sourcesToTry: CookieSource[] = Array.isArray(cookieSource)
+    ? cookieSource
+    : cookieSource
+      ? [cookieSource]
+      : ['safari', 'chrome', 'firefox'];
 
   for (const source of sourcesToTry) {
     if (cookies.authToken && cookies.ct0) break;
 
     if (source === 'safari') {
-      if (!allowSafari) {
-        warnings.push('Safari cookie extraction disabled (allowSafari=false).');
-        continue;
-      }
-
       const safariResult = await extractCookiesFromSafari();
       warnings.push(...safariResult.warnings);
 
@@ -529,11 +520,6 @@ export async function resolveCredentials(options: {
     }
 
     if (source === 'chrome') {
-      if (!allowChrome) {
-        warnings.push('Chrome cookie extraction disabled (allowChrome=false).');
-        continue;
-      }
-
       const chromeResult = await extractCookiesFromChrome(options.chromeProfile);
       warnings.push(...chromeResult.warnings);
 
@@ -549,11 +535,6 @@ export async function resolveCredentials(options: {
     }
 
     if (source === 'firefox') {
-      if (!allowFirefox) {
-        warnings.push('Firefox cookie extraction disabled (allowFirefox=false).');
-        continue;
-      }
-
       const firefoxResult = await extractCookiesFromFirefox(options.firefoxProfile);
       warnings.push(...firefoxResult.warnings);
 

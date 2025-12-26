@@ -3,7 +3,10 @@
 ## 0.3.1 — Unreleased
 
 ### Added
-- Cookie source selection: `--cookie-source auto|safari|chrome|firefox` + `cookieSource` config option.
+- Cookie source selection: `--cookie-source safari|chrome|firefox` (repeatable) + `cookieSource` config (string or array).
+
+### Breaking
+- Remove `allowSafari`/`allowChrome`/`allowFirefox` config toggles in favor of `cookieSource` ordering.
 
 ## 0.3.0 — 2025-12-26
 

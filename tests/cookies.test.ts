@@ -135,7 +135,7 @@ describe('cookies', () => {
         return '';
       });
 
-      const result = await resolveCredentials({ cookieSource: 'firefox', allowChrome: false });
+      const result = await resolveCredentials({ cookieSource: 'firefox' });
       expect(result.cookies.authToken).toBe('firefox_auth');
       expect(result.cookies.ct0).toBe('firefox_ct0');
       expect(result.cookies.source).toContain('Firefox');
@@ -157,7 +157,7 @@ describe('cookies', () => {
         ]),
       );
 
-      const result = await resolveCredentials({ cookieSource: 'safari', allowChrome: false, allowFirefox: false });
+      const result = await resolveCredentials({ cookieSource: 'safari' });
       expect(result.cookies.authToken).toBe('safari_auth');
       expect(result.cookies.ct0).toBe('safari_ct0');
       expect(result.cookies.source).toBe('Safari');
@@ -184,11 +184,7 @@ describe('cookies', () => {
       const { execSync } = await import('node:child_process');
       (execSync as unknown as vi.Mock).mockReturnValue('auth_token|firefox_auth\nct0|firefox_ct0');
 
-      const result = await resolveCredentials({
-        allowFirefox: true,
-        allowChrome: false,
-        firefoxProfile: 'abc.default-release',
-      });
+      const result = await resolveCredentials({ cookieSource: 'firefox', firefoxProfile: 'abc.default-release' });
 
       expect(result.cookies.authToken).toBe('firefox_auth');
       expect(result.cookies.ct0).toBe('firefox_ct0');
@@ -215,7 +211,7 @@ describe('cookies', () => {
       process.env.CT0 = 'test_ct0';
 
       const { resolveCredentials } = await import('../src/lib/cookies.js');
-      const result = await resolveCredentials({ allowFirefox: false, allowChrome: false });
+      const result = await resolveCredentials({ cookieSource: 'safari' });
 
       expect(result.cookies.authToken).toBe('test_auth_token');
       expect(result.cookies.ct0).toBe('test_ct0');
@@ -227,7 +223,7 @@ describe('cookies', () => {
       process.env.TWITTER_CT0 = 'twitter_ct0';
 
       const { resolveCredentials } = await import('../src/lib/cookies.js');
-      const result = await resolveCredentials({ allowFirefox: false, allowChrome: false });
+      const result = await resolveCredentials({ cookieSource: 'safari' });
 
       expect(result.cookies.authToken).toBe('twitter_auth');
       expect(result.cookies.ct0).toBe('twitter_ct0');
@@ -249,7 +245,7 @@ describe('cookies', () => {
       process.env.CT0 = '';
 
       const { resolveCredentials } = await import('../src/lib/cookies.js');
-      const result = await resolveCredentials({ allowFirefox: false, allowChrome: false });
+      const result = await resolveCredentials({ cookieSource: 'safari' });
 
       expect(result.cookies.authToken).toBeNull();
       expect(result.cookies.ct0).toBeNull();
@@ -258,7 +254,7 @@ describe('cookies', () => {
 
     it('should warn when credentials are missing', async () => {
       const { resolveCredentials } = await import('../src/lib/cookies.js');
-      const result = await resolveCredentials({ allowFirefox: false, allowChrome: false });
+      const result = await resolveCredentials({ cookieSource: 'safari' });
 
       expect(result.warnings).toContain(
         'Missing auth_token - provide via --auth-token, AUTH_TOKEN env var, or login to x.com in Safari/Chrome/Firefox',
@@ -281,12 +277,7 @@ describe('cookies', () => {
       });
 
       const { resolveCredentials } = await import('../src/lib/cookies.js');
-      const result = await resolveCredentials({
-        allowSafari: false,
-        allowFirefox: false,
-        allowChrome: true,
-        chromeProfile: 'Default',
-      });
+      const result = await resolveCredentials({ cookieSource: 'chrome', chromeProfile: 'Default' });
 
       expect(result.cookies.authToken).toBe('test_auth');
       expect(result.cookies.ct0).toBe('test_ct0');
@@ -336,7 +327,7 @@ describe('cookies', () => {
       );
 
       const { resolveCredentials } = await import('../src/lib/cookies.js');
-      const result = await resolveCredentials({ allowSafari: true, allowChrome: true, allowFirefox: false });
+      const result = await resolveCredentials({ cookieSource: ['safari', 'chrome'] });
 
       expect(result.cookies.authToken).toBe('safari_auth');
       expect(result.cookies.ct0).toBe('safari_ct0');

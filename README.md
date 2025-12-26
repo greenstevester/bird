@@ -62,7 +62,7 @@ Global options:
 - `--plain`: stable output (no emoji, no color).
 - `--no-emoji`: disable emoji output.
 - `--no-color`: disable ANSI colors (or set `NO_COLOR=1`).
-- `--cookie-source <auto|safari|chrome|firefox>`: choose which browser cookies to use (default `auto`).
+- `--cookie-source <safari|chrome|firefox>`: choose browser cookie source (repeatable; order matters).
 
 ## Authentication (GraphQL)
 
@@ -73,7 +73,7 @@ X endpoints and authenticates via cookies (`auth_token`, `ct0`).
 
 1. CLI flags: `--auth-token`, `--ct0`
 2. Environment variables: `AUTH_TOKEN`, `CT0` (fallback: `TWITTER_AUTH_TOKEN`, `TWITTER_CT0`)
-3. Browser cookies (macOS): Safari, Chrome, Firefox (override via `--cookie-source`)
+3. Browser cookies (macOS): Safari, Chrome, Firefox (override via `--cookie-source` order)
 
 Browser cookie sources:
 - Safari: `~/Library/Cookies/Cookies.binarycookies` (fallback: `~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies`)
@@ -91,11 +91,9 @@ Example `~/.config/bird/config.json5`:
 
 ```json5
 {
-  cookieSource: "auto", // or: "firefox" / "chrome" / "safari"
+  // Cookie source order for browser extraction (string or array)
+  cookieSource: ["firefox", "safari"],
   firefoxProfile: "default-release",
-  allowSafari: true,
-  allowFirefox: true,
-  allowChrome: false,
   timeoutMs: 20000
 }
 ```
