@@ -3,7 +3,7 @@
 ## 0.1.2 — Unreleased
 
 ### Fixed
-- CLI `--version`: read version from `package.json`/`VERSION` (no hardcoded string).
+- CLI `--version`: read version from `package.json`/`VERSION` (no hardcoded string) + append git sha when available.
 
 ## 0.1.1 — 2025-12-26
 
