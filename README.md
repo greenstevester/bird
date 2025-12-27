@@ -87,7 +87,7 @@ Write operations:
 
 1. CLI flags: `--auth-token`, `--ct0`
 2. Environment variables: `AUTH_TOKEN`, `CT0` (fallback: `TWITTER_AUTH_TOKEN`, `TWITTER_CT0`)
-3. Browser cookies (macOS): Safari, Chrome, Firefox (override via `--cookie-source` order)
+3. Browser cookies via `@steipete/sweet-cookie` (override via `--cookie-source` order)
 
 Browser cookie sources:
 - Safari: `~/Library/Cookies/Cookies.binarycookies` (fallback: `~/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies`)

@@ -1,13 +1,16 @@
 lockfileVersion: '9.0'
 
 settings:
-  autoInstallPeers: true
+  autoInstallPeers: false
   excludeLinksFromLockfile: false
 
 importers:
 
   .:
     dependencies:
+      '@steipete/sweet-cookie':
+        specifier: file:../sweet-cookie/packages/core
+        version: file:../sweet-cookie/packages/core
       commander:
         specifier: ^14.0.2
         version: 14.0.2
@@ -391,6 +394,15 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@steipete/sweet-cookie@file:../sweet-cookie/packages/core':
+    resolution: {directory: ../sweet-cookie/packages/core, type: directory}
+    engines: {node: '>=22'}
+    peerDependencies:
+      chrome-cookies-secure: ^3.0.0
+    peerDependenciesMeta:
+      chrome-cookies-secure:
+        optional: true
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -911,6 +923,8 @@ snapshots:
     optional: true
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@steipete/sweet-cookie@file:../sweet-cookie/packages/core': {}
 
   '@types/chai@5.2.3':
     dependencies:
