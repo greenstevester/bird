@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@steipete/sweet-cookie':
-        specifier: file:../sweet-cookie/packages/core
-        version: file:../sweet-cookie/packages/core
+        specifier: github:steipete/sweet-cookie#path:packages/core
+        version: https://codeload.github.com/steipete/sweet-cookie/tar.gz/62b5e7815c792674d3414aa8ae1face5992c40ec#path:packages/core
       commander:
         specifier: ^14.0.2
         version: 14.0.2
@@ -395,8 +395,9 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@steipete/sweet-cookie@file:../sweet-cookie/packages/core':
-    resolution: {directory: ../sweet-cookie/packages/core, type: directory}
+  '@steipete/sweet-cookie@https://codeload.github.com/steipete/sweet-cookie/tar.gz/62b5e7815c792674d3414aa8ae1face5992c40ec#path:packages/core':
+    resolution: {path: packages/core, tarball: https://codeload.github.com/steipete/sweet-cookie/tar.gz/62b5e7815c792674d3414aa8ae1face5992c40ec}
+    version: 0.0.0
     engines: {node: '>=22'}
     peerDependencies:
       chrome-cookies-secure: ^3.0.0
@@ -924,7 +925,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@steipete/sweet-cookie@file:../sweet-cookie/packages/core': {}
+  '@steipete/sweet-cookie@https://codeload.github.com/steipete/sweet-cookie/tar.gz/62b5e7815c792674d3414aa8ae1face5992c40ec#path:packages/core': {}
 
   '@types/chai@5.2.3':
     dependencies:

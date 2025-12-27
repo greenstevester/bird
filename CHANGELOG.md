@@ -2,6 +2,9 @@
 
 ## 0.4.1 — Unreleased
 
+### Changed
+- Cookie extraction now uses `@steipete/sweet-cookie` (drops `sqlite3` CLI + custom browser readers in `bird`).
+
 ## 0.4.0 — 2025-12-26
 
 ### Added

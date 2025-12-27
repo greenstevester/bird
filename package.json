@@ -28,7 +28,7 @@
     "graphql:update": "tsx scripts/update-query-ids.ts"
   },
   "dependencies": {
-    "@steipete/sweet-cookie": "file:../sweet-cookie/packages/core",
+    "@steipete/sweet-cookie": "github:steipete/sweet-cookie#path:packages/core",
     "commander": "^14.0.2",
     "json5": "^2.2.3",
     "kleur": "^4.1.5"
